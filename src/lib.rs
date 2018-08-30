@@ -108,7 +108,10 @@ impl r2d2::ManageConnection for RedisConnectionManager {
     }
 
     fn is_valid(&self, conn: &mut redis::Connection) -> Result<(), Error> {
-        redis::cmd("PING").query(conn).map_err(Error::Other)
+        match conn.is_open() {
+            true => Ok(()),
+            false => Err(Error::Other(redis::RedisError::from((redis::ErrorKind::IoError, "Redis connection is invalid"))))
+        }
     }
 
     fn has_broken(&self, _conn: &mut redis::Connection) -> bool {
